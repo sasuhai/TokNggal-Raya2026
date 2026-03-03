@@ -29,7 +29,7 @@ const Navbar = () => {
         { href: '#rsvp', label: 'Daftar Hadir', icon: <CalendarCheck size={16} /> },
         { href: '#potluck', label: 'Potluck', icon: <Utensils size={16} /> },
         { href: '#sumbangan', label: 'Sumbangan', icon: <Heart size={16} /> },
-        { href: '#galeri', label: 'Galeri', icon: <Users size={16} /> },
+        { href: 'https://familylinx-a03dc.web.app/toknggal/albums', label: 'Galeri', icon: <Users size={16} />, external: true },
     ];
 
     const scrollTo = (href) => {
@@ -57,11 +57,23 @@ const Navbar = () => {
                 </div>
 
                 <div className="navbar-links">
-                    {navLinks.map(l => (
-                        <button key={l.href} className="nav-link" onClick={() => scrollTo(l.href)}>
-                            {l.icon}{l.label}
-                        </button>
-                    ))}
+                    {navLinks.map(l =>
+                        l.external ? (
+                            <a
+                                key={l.href}
+                                href={l.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="nav-link"
+                            >
+                                {l.icon}{l.label}
+                            </a>
+                        ) : (
+                            <button key={l.href} className="nav-link" onClick={() => scrollTo(l.href)}>
+                                {l.icon}{l.label}
+                            </button>
+                        )
+                    )}
                 </div>
 
                 <button className="navbar-hamburger" onClick={() => setOpen(!open)} aria-label="Menu">
@@ -71,11 +83,24 @@ const Navbar = () => {
 
             {/* Mobile Drawer */}
             <div className={`mobile-drawer${open ? ' open' : ''}`}>
-                {navLinks.map(l => (
-                    <button key={l.href} className="mobile-nav-link" onClick={() => scrollTo(l.href)}>
-                        {l.icon}{l.label}
-                    </button>
-                ))}
+                {navLinks.map(l =>
+                    l.external ? (
+                        <a
+                            key={l.href}
+                            href={l.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mobile-nav-link"
+                            onClick={() => setOpen(false)}
+                        >
+                            {l.icon}{l.label}
+                        </a>
+                    ) : (
+                        <button key={l.href} className="mobile-nav-link" onClick={() => scrollTo(l.href)}>
+                            {l.icon}{l.label}
+                        </button>
+                    )
+                )}
             </div>
         </nav>
     );
