@@ -1,0 +1,123 @@
+.share-section {
+    background: linear-gradient(180deg, var(--gold-100) 0%, var(--cream) 100%);
+}
+
+.share-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .share-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Message card */
+.share-message-card {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.share-msg-header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 2px solid var(--emerald-100);
+}
+
+.share-msg-preview {
+    background: #f0fdf4;
+    border: 1px solid rgba(6, 95, 70, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-family: monospace;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.share-link-preview {
+    color: var(--emerald-600);
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+/* QR */
+.share-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.qr-card {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    align-self: flex-start;
+}
+
+.qr-wrapper {
+    background: white;
+    border-radius: 20px;
+    padding: 1rem;
+    border: 3px solid var(--emerald-100);
+    box-shadow: var(--shadow-md);
+}
+
+.qr-caption {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Tips */
+.share-tips {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(6, 95, 70, 0.08);
+    box-shadow: var(--shadow-sm);
+}
+
+.share-tips h4 {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--emerald-800);
+    margin-bottom: 0.875rem;
+}
+
+.share-tips ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.share-tips li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}

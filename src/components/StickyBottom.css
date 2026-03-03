@@ -1,0 +1,64 @@
+.sticky-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(6, 95, 70, 0.1);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    gap: 0.625rem;
+    justify-content: center;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 768px) {
+    .sticky-bottom {
+        display: none;
+    }
+}
+
+.sticky-btn {
+    flex: 1;
+    max-width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.sticky-btn-gold {
+    background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+    color: white;
+    box-shadow: 0 3px 12px rgba(212, 175, 55, 0.4);
+}
+
+.sticky-btn-emerald {
+    background: linear-gradient(135deg, var(--emerald-600), var(--emerald-700));
+    color: white;
+    box-shadow: 0 3px 12px rgba(5, 150, 105, 0.35);
+}
+
+.sticky-btn-outline {
+    background: white;
+    color: var(--emerald-700);
+    border: 2px solid var(--emerald-200) !important;
+}
+
+.sticky-btn:hover {
+    transform: translateY(-2px);
+}
+
+.sticky-btn:active {
+    transform: scale(0.97);
+}
