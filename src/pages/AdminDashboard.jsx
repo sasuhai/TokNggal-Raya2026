@@ -45,8 +45,18 @@ const AdminDashboard = () => {
     };
 
     const exportCSV = () => {
-        const headers = ['Nama', 'Keluarga', 'Jenis', 'Pax', 'Telefon', 'Emel', 'Catatan'];
-        const rows = rsvp.map(r => [r.nama, r.keluarga || '', r.type, r.pax, r.phone, r.email || '', r.catatan || '']);
+        const headers = ['Nama', 'Keluarga', 'Jenis', 'Dewasa', 'Kanak-kanak', 'Jumlah Pax', 'Telefon', 'Emel', 'Catatan'];
+        const rows = rsvp.map(r => [
+            r.nama,
+            r.keluarga || '',
+            r.type,
+            r.pax_dewasa ?? r.pax ?? 0,
+            r.pax_kanak ?? 0,
+            (Number(r.pax_dewasa) || Number(r.pax) || 0) + (Number(r.pax_kanak) || 0),
+            r.phone,
+            r.email || '',
+            r.catatan || ''
+        ]);
         const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
         const a = document.createElement('a');
         a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
@@ -55,7 +65,9 @@ const AdminDashboard = () => {
     };
 
     const formatRM = n => `RM ${Number(n).toLocaleString('ms-MY', { minimumFractionDigits: 2 })}`;
-    const totalPax = rsvp.reduce((s, r) => s + (Number(r.pax) || 0), 0);
+    const totalDewasa = rsvp.reduce((s, r) => s + (Number(r.pax_dewasa) || Number(r.pax) || 0), 0);
+    const totalKanak = rsvp.reduce((s, r) => s + (Number(r.pax_kanak) || 0), 0);
+    const totalPax = totalDewasa + totalKanak;
     const totalSumbangan = sumbangan.reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
     if (loading) return (
@@ -109,9 +121,19 @@ const AdminDashboard = () => {
                         <div className="stat-label">Pendaftaran RSVP</div>
                     </div>
                     <div className="stat-card">
+                        <div className="stat-icon">🧑</div>
+                        <div className="stat-number">{totalDewasa}</div>
+                        <div className="stat-label">Jumlah Dewasa</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">👶</div>
+                        <div className="stat-number">{totalKanak}</div>
+                        <div className="stat-label">Jumlah Kanak-kanak</div>
+                    </div>
+                    <div className="stat-card">
                         <div className="stat-icon">👨‍👩‍👧‍👦</div>
                         <div className="stat-number">{totalPax}</div>
-                        <div className="stat-label">Jumlah Pax</div>
+                        <div className="stat-label">Jumlah Keseluruhan</div>
                     </div>
                     <div className="stat-card">
                         <div className="stat-icon"><Utensils size={24} /></div>
@@ -155,7 +177,9 @@ const AdminDashboard = () => {
                                     <th>Nama</th>
                                     <th>Keluarga</th>
                                     <th>Jenis</th>
-                                    <th>Pax</th>
+                                    <th>🧑 Dewasa</th>
+                                    <th>👶 Kanak</th>
+                                    <th>Jumlah</th>
                                     <th>Telefon</th>
                                     <th>Catatan</th>
                                     <th>Padam</th>
@@ -167,7 +191,11 @@ const AdminDashboard = () => {
                                         <td className="td-bold">{r.nama}</td>
                                         <td>{r.keluarga || '–'}</td>
                                         <td><span className="badge badge-emerald">{r.type}</span></td>
-                                        <td>{r.pax}</td>
+                                        <td>{r.pax_dewasa ?? r.pax ?? 0}</td>
+                                        <td>{r.pax_kanak ?? 0}</td>
+                                        <td style={{ fontWeight: 700, color: 'var(--emerald-700)' }}>
+                                            {(Number(r.pax_dewasa) || Number(r.pax) || 0) + (Number(r.pax_kanak) || 0)}
+                                        </td>
                                         <td>{r.phone}</td>
                                         <td className="td-muted">{r.catatan || '–'}</td>
                                         <td>

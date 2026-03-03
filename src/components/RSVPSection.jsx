@@ -8,7 +8,8 @@ const initialForm = {
     type: 'keluarga',
     nama: '',
     keluarga: '',
-    pax: 1,
+    pax_dewasa: 1,
+    pax_kanak: 0,
     phone: '',
     email: '',
     catatan: '',
@@ -19,7 +20,7 @@ const RSVPSection = () => {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [stats, setStats] = useState({ families: 0, totalPax: 0 });
+    const [stats, setStats] = useState({ families: 0, totalDewasa: 0, totalKanak: 0 });
     const [list, setList] = useState([]);
     const [viewMode, setViewMode] = useState('card');
     const [search, setSearch] = useState('');
@@ -35,12 +36,15 @@ const RSVPSection = () => {
         const unsub = onSnapshot(q, (snap) => {
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             setList(data);
-            const totalPax = data.reduce((sum, d) => sum + (Number(d.pax) || 0), 0);
+            const totalDewasa = data.reduce((s, d) => s + (Number(d.pax_dewasa) || Number(d.pax) || 0), 0);
+            const totalKanak = data.reduce((s, d) => s + (Number(d.pax_kanak) || 0), 0);
             const families = data.filter(d => d.type === 'keluarga').length;
-            setStats({ families, totalPax });
+            setStats({ families, totalDewasa, totalKanak });
         });
         return () => unsub();
     }, []);
+
+    const totalPax = (item) => (Number(item.pax_dewasa) || Number(item.pax) || 0) + (Number(item.pax_kanak) || 0);
 
     const handleChange = e => {
         const { name, value } = e.target;
@@ -52,11 +56,13 @@ const RSVPSection = () => {
         setError('');
         if (!form.nama.trim()) { setError('Sila masukkan nama penuh.'); return; }
         if (!form.phone.trim()) { setError('Sila masukkan nombor telefon.'); return; }
+        if (Number(form.pax_dewasa) < 1) { setError('Jumlah dewasa sekurang-kurangnya 1.'); return; }
         setLoading(true);
         try {
             await addDoc(collection(db, 'rsvp_attendance'), {
                 ...form,
-                pax: Number(form.pax),
+                pax_dewasa: Number(form.pax_dewasa),
+                pax_kanak: Number(form.pax_kanak),
                 created_at: serverTimestamp(),
             });
             setSubmitted(true);
@@ -84,7 +90,8 @@ const RSVPSection = () => {
             nama: item.nama || '',
             keluarga: item.keluarga || '',
             type: item.type || 'keluarga',
-            pax: item.pax || 1,
+            pax_dewasa: item.pax_dewasa ?? item.pax ?? 1,
+            pax_kanak: item.pax_kanak ?? 0,
             phone: item.phone || '',
             email: item.email || '',
             catatan: item.catatan || '',
@@ -106,7 +113,8 @@ const RSVPSection = () => {
                 nama: editForm.nama,
                 keluarga: editForm.keluarga,
                 type: editForm.type,
-                pax: Number(editForm.pax),
+                pax_dewasa: Number(editForm.pax_dewasa),
+                pax_kanak: Number(editForm.pax_kanak),
                 phone: editForm.phone,
                 email: editForm.email,
                 catatan: editForm.catatan,
@@ -136,14 +144,19 @@ const RSVPSection = () => {
                         <div className="stat-label">Keluarga Berdaftar</div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon">👨‍👩‍👧‍👦</div>
-                        <div className="stat-number">{stats.totalPax}</div>
-                        <div className="stat-label">Jumlah Pax Hadir</div>
+                        <div className="stat-icon">🧑</div>
+                        <div className="stat-number">{stats.totalDewasa}</div>
+                        <div className="stat-label">Jumlah Dewasa</div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon">📝</div>
-                        <div className="stat-number">{list.length}</div>
-                        <div className="stat-label">Pendaftaran</div>
+                        <div className="stat-icon">👶</div>
+                        <div className="stat-number">{stats.totalKanak}</div>
+                        <div className="stat-label">Jumlah Kanak-kanak</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon">👨‍👩‍👧‍👦</div>
+                        <div className="stat-number">{stats.totalDewasa + stats.totalKanak}</div>
+                        <div className="stat-label">Jumlah Keseluruhan</div>
                     </div>
                 </div>
 
@@ -164,6 +177,7 @@ const RSVPSection = () => {
                                     <Users size={20} />
                                     <span>Maklumat Pendaftaran</span>
                                 </div>
+
                                 <div className="form-group">
                                     <label className="form-label">Jenis Pendaftaran</label>
                                     <div className="tab-group">
@@ -173,6 +187,7 @@ const RSVPSection = () => {
                                             onClick={() => setForm(p => ({ ...p, type: 'individu' }))}>👤 Individu</button>
                                     </div>
                                 </div>
+
                                 <div className="form-grid form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Nama Penuh *</label>
@@ -183,25 +198,48 @@ const RSVPSection = () => {
                                         <input className="form-control" name="keluarga" value={form.keluarga} onChange={handleChange} placeholder="Cth: Keluarga Pak Long" />
                                     </div>
                                 </div>
+
+                                {/* Attendance split */}
+                                <div className="pax-split-label">
+                                    <Users size={15} />
+                                    <span>Bilangan Kehadiran</span>
+                                </div>
                                 <div className="form-grid form-grid-2">
                                     <div className="form-group">
-                                        <label className="form-label">Jumlah Pax *</label>
-                                        <input className="form-control" name="pax" type="number" min="1" max="50" value={form.pax} onChange={handleChange} />
+                                        <label className="form-label">🧑 Dewasa *</label>
+                                        <input className="form-control" name="pax_dewasa" type="number" min="1" max="50"
+                                            value={form.pax_dewasa} onChange={handleChange} />
+                                        <span className="form-hint">13 tahun ke atas</span>
                                     </div>
+                                    <div className="form-group">
+                                        <label className="form-label">👶 Kanak-kanak</label>
+                                        <input className="form-control" name="pax_kanak" type="number" min="0" max="30"
+                                            value={form.pax_kanak} onChange={handleChange} />
+                                        <span className="form-hint">12 tahun ke bawah</span>
+                                    </div>
+                                </div>
+                                <div className="pax-total-hint">
+                                    Jumlah hadir: <strong>{Number(form.pax_dewasa || 0) + Number(form.pax_kanak || 0)} orang</strong>
+                                </div>
+
+                                <div className="form-grid form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">No. Telefon *</label>
                                         <input className="form-control" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="012-3456789" required />
                                     </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Emel (pilihan)</label>
+                                        <input className="form-control" name="email" type="email" value={form.email} onChange={handleChange} placeholder="email@contoh.com" />
+                                    </div>
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label">Emel (pilihan)</label>
-                                    <input className="form-control" name="email" type="email" value={form.email} onChange={handleChange} placeholder="email@contoh.com" />
-                                </div>
+
                                 <div className="form-group">
                                     <label className="form-label">Catatan (pilihan)</label>
                                     <textarea className="form-control" name="catatan" value={form.catatan} onChange={handleChange} rows={3} placeholder="Ada keperluan khas? Hubungi kami!" />
                                 </div>
+
                                 {error && <div className="error-text" style={{ fontSize: '0.875rem' }}>⚠️ {error}</div>}
+
                                 <button className="btn btn-primary btn-lg w-full" type="submit" disabled={loading}>
                                     {loading ? <><span className="spinner" /> Mendaftar...</> : <><UserCheck size={20} /> Daftar Sekarang</>}
                                 </button>
@@ -226,13 +264,11 @@ const RSVPSection = () => {
                                             <div className="rsvp-name">{item.nama}</div>
                                             {item.keluarga && <div className="rsvp-family">🏠 {item.keluarga}</div>}
                                             <div className="rsvp-pax-row">
-                                                <span className="badge badge-emerald">👥 {item.pax} pax</span>
-                                                <span className="badge badge-gold">{item.type === 'keluarga' ? '🏠 Keluarga' : '👤 Individu'}</span>
+                                                <span className="badge badge-emerald">🧑 {item.pax_dewasa ?? item.pax ?? 0} dewasa</span>
+                                                {(Number(item.pax_kanak) > 0) && <span className="badge badge-gold">👶 {item.pax_kanak} kanak</span>}
                                             </div>
                                         </div>
-                                        <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit pendaftaran">
-                                            <Pencil size={13} />
-                                        </button>
+                                        <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit"><Pencil size={13} /></button>
                                     </div>
                                 ))}
                                 {list.length > 8 && (
@@ -252,7 +288,12 @@ const RSVPSection = () => {
                             <div className="rsvp-full-title-row">
                                 <div>
                                     <h3>📋 Senarai Lengkap Pendaftaran</h3>
-                                    <p className="rsvp-full-subtitle">Semua <strong>{list.length}</strong> pendaftaran — Jumlah <strong>{stats.totalPax} pax</strong> hadir</p>
+                                    <p className="rsvp-full-subtitle">
+                                        <strong>{list.length}</strong> pendaftaran —
+                                        🧑 <strong>{stats.totalDewasa} dewasa</strong> +
+                                        👶 <strong>{stats.totalKanak} kanak-kanak</strong> =
+                                        <strong> {stats.totalDewasa + stats.totalKanak} orang</strong>
+                                    </p>
                                 </div>
                                 <div className="rsvp-view-toggle">
                                     <button className={`view-btn ${viewMode === 'card' ? 'active' : ''}`} onClick={() => setViewMode('card')} title="Paparan Kad"><LayoutGrid size={16} /></button>
@@ -284,8 +325,12 @@ const RSVPSection = () => {
                                             <div className="rsvp-full-name">{item.nama}</div>
                                             {item.keluarga && <div className="rsvp-full-keluarga">🏠 {item.keluarga}</div>}
                                             <div className="rsvp-full-tags">
-                                                <span className="badge badge-emerald">👥 {item.pax} pax</span>
+                                                <span className="badge badge-emerald">🧑 {item.pax_dewasa ?? item.pax ?? 0} dewasa</span>
+                                                {(Number(item.pax_kanak) > 0) && <span className="badge badge-gold">👶 {item.pax_kanak} kanak</span>}
+                                            </div>
+                                            <div className="rsvp-full-tags" style={{ marginTop: '0.1rem' }}>
                                                 <span className="badge badge-gold">{item.type === 'keluarga' ? '🏠 Keluarga' : '👤 Individu'}</span>
+                                                <span className="badge badge-emerald">Jumlah: {totalPax(item)}</span>
                                             </div>
                                             <div className="rsvp-full-phone"><Phone size={12} /> {item.phone}</div>
                                             {item.catatan && <div className="rsvp-full-catatan">💬 {item.catatan}</div>}
@@ -303,10 +348,12 @@ const RSVPSection = () => {
                                         <tr>
                                             <th>No.</th>
                                             <th>Nama</th>
-                                            <th>Keluarga / Cawangan</th>
+                                            <th>Keluarga</th>
                                             <th>Jenis</th>
-                                            <th>Pax</th>
-                                            <th>No. Telefon</th>
+                                            <th>🧑 Dewasa</th>
+                                            <th>👶 Kanak</th>
+                                            <th>Jumlah</th>
+                                            <th>Telefon</th>
                                             <th>Catatan</th>
                                             <th>Edit</th>
                                         </tr>
@@ -327,7 +374,9 @@ const RSVPSection = () => {
                                                         {item.type === 'keluarga' ? '🏠 Keluarga' : '👤 Individu'}
                                                     </span>
                                                 </td>
-                                                <td><span className="td-pax">{item.pax}</span></td>
+                                                <td><span className="td-pax">{item.pax_dewasa ?? item.pax ?? 0}</span></td>
+                                                <td><span className="td-pax">{item.pax_kanak ?? 0}</span></td>
+                                                <td><span className="td-pax td-total">{totalPax(item)}</span></td>
                                                 <td className="td-phone">
                                                     <a href={`tel:${item.phone}`} className="phone-link">{item.phone}</a>
                                                 </td>
@@ -342,8 +391,10 @@ const RSVPSection = () => {
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colSpan={4} className="tf-label">JUMLAH KESELURUHAN</td>
-                                            <td className="tf-total">{filtered.reduce((s, r) => s + (Number(r.pax) || 0), 0)} pax</td>
+                                            <td colSpan={4} className="tf-label">JUMLAH</td>
+                                            <td className="tf-total">{filtered.reduce((s, r) => s + (Number(r.pax_dewasa) || Number(r.pax) || 0), 0)}</td>
+                                            <td className="tf-total">{filtered.reduce((s, r) => s + (Number(r.pax_kanak) || 0), 0)}</td>
+                                            <td className="tf-total">{filtered.reduce((s, r) => s + totalPax(r), 0)}</td>
                                             <td colSpan={3}></td>
                                         </tr>
                                     </tfoot>
@@ -382,19 +433,31 @@ const RSVPSection = () => {
                                     <input className="form-control" name="keluarga" value={editForm.keluarga} onChange={handleEditChange} />
                                 </div>
                             </div>
+                            <div className="pax-split-label"><Users size={14} /><span>Bilangan Kehadiran</span></div>
                             <div className="form-grid form-grid-2">
                                 <div className="form-group">
-                                    <label className="form-label">Jumlah Pax *</label>
-                                    <input className="form-control" name="pax" type="number" min="1" max="50" value={editForm.pax} onChange={handleEditChange} />
+                                    <label className="form-label">🧑 Dewasa *</label>
+                                    <input className="form-control" name="pax_dewasa" type="number" min="1" max="50" value={editForm.pax_dewasa} onChange={handleEditChange} />
+                                    <span className="form-hint">13 tahun ke atas</span>
                                 </div>
+                                <div className="form-group">
+                                    <label className="form-label">👶 Kanak-kanak</label>
+                                    <input className="form-control" name="pax_kanak" type="number" min="0" max="30" value={editForm.pax_kanak} onChange={handleEditChange} />
+                                    <span className="form-hint">12 tahun ke bawah</span>
+                                </div>
+                            </div>
+                            <div className="pax-total-hint">
+                                Jumlah hadir: <strong>{Number(editForm.pax_dewasa || 0) + Number(editForm.pax_kanak || 0)} orang</strong>
+                            </div>
+                            <div className="form-grid form-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">No. Telefon *</label>
                                     <input className="form-control" name="phone" type="tel" value={editForm.phone} onChange={handleEditChange} />
                                 </div>
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Emel</label>
-                                <input className="form-control" name="email" type="email" value={editForm.email} onChange={handleEditChange} />
+                                <div className="form-group">
+                                    <label className="form-label">Emel</label>
+                                    <input className="form-control" name="email" type="email" value={editForm.email} onChange={handleEditChange} />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Catatan</label>

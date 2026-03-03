@@ -4,14 +4,14 @@
 
 .rsvp-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     margin-bottom: 2.5rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
     .rsvp-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -499,4 +499,40 @@
     font-size: 1rem;
     font-weight: 900;
     color: var(--gold-300);
+}
+
+/* Pax Split UI */
+.pax-split-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--emerald-700);
+    background: var(--emerald-50);
+    border: 1px solid var(--emerald-100);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.form-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+.pax-total-hint {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    background: rgba(16, 185, 129, 0.06);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--emerald-400);
+}
+
+.td-total {
+    font-weight: 800;
+    color: var(--emerald-700);
 }
