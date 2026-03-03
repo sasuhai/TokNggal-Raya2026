@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PosterSection from './components/PosterSection';
 import VenueSection from './components/VenueSection';
+import FamilySection from './components/FamilySection';
 import RSVPSection from './components/RSVPSection';
 import PotluckSection from './components/PotluckSection';
 import SumbanganSection from './components/SumbanganSection';
@@ -34,6 +35,7 @@ const HomePage = () => {
       <Hero />
       <PosterSection />
       <VenueSection />
+      <FamilySection />
       <RSVPSection />
       <PotluckSection />
       <SumbanganSection />

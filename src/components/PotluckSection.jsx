@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Utensils, CheckCircle, Filter } from 'lucide-react';
+import { Utensils, CheckCircle, Filter, Pencil, X, Save } from 'lucide-react';
 import './PotluckSection.css';
 
 const categories = ['Semua', 'Nasi', 'Lauk', 'Kuih', 'Minuman', 'Pencuci Mulut', 'Lain-lain'];
@@ -16,6 +16,12 @@ const PotluckSection = () => {
     const [error, setError] = useState('');
     const [list, setList] = useState([]);
     const [filter, setFilter] = useState('Semua');
+
+    // Edit state
+    const [editItem, setEditItem] = useState(null); // item being edited
+    const [editForm, setEditForm] = useState({});
+    const [editLoading, setEditLoading] = useState(false);
+    const [editError, setEditError] = useState('');
 
     useEffect(() => {
         const q = query(collection(db, 'potluck_list'), orderBy('created_at', 'desc'));
@@ -42,6 +48,37 @@ const PotluckSection = () => {
             setError('Ralat berlaku. Sila cuba semula.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Edit handlers
+    const openEdit = (item) => {
+        setEditItem(item);
+        setEditForm({ nama: item.nama, kategori: item.kategori, makanan: item.makanan, kuantiti: item.kuantiti || '' });
+        setEditError('');
+    };
+
+    const closeEdit = () => { setEditItem(null); setEditForm({}); setEditError(''); };
+
+    const handleEditChange = e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+    const handleEditSave = async () => {
+        setEditError('');
+        if (!editForm.nama.trim()) { setEditError('Nama tidak boleh kosong.'); return; }
+        if (!editForm.makanan.trim()) { setEditError('Nama hidangan tidak boleh kosong.'); return; }
+        setEditLoading(true);
+        try {
+            await updateDoc(doc(db, 'potluck_list', editItem.id), {
+                nama: editForm.nama,
+                kategori: editForm.kategori,
+                makanan: editForm.makanan,
+                kuantiti: editForm.kuantiti,
+            });
+            closeEdit();
+        } catch (err) {
+            setEditError('Ralat semasa kemaskini. Cuba semula.');
+        } finally {
+            setEditLoading(false);
         }
     };
 
@@ -80,12 +117,9 @@ const PotluckSection = () => {
                                     <label className="form-label">Kategori Makanan *</label>
                                     <div className="cat-selector">
                                         {categories.slice(1).map(cat => (
-                                            <button
-                                                key={cat}
-                                                type="button"
+                                            <button key={cat} type="button"
                                                 className={`cat-btn ${form.kategori === cat ? 'active' : ''}`}
-                                                onClick={() => setForm(p => ({ ...p, kategori: cat }))}
-                                            >
+                                                onClick={() => setForm(p => ({ ...p, kategori: cat }))}>
                                                 {catEmoji[cat]} {cat}
                                             </button>
                                         ))}
@@ -119,11 +153,7 @@ const PotluckSection = () => {
                         <div className="cat-filter">
                             <Filter size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                             {categories.map(c => (
-                                <button
-                                    key={c}
-                                    className={`filter-btn ${filter === c ? 'active' : ''}`}
-                                    onClick={() => setFilter(c)}
-                                >
+                                <button key={c} className={`filter-btn ${filter === c ? 'active' : ''}`} onClick={() => setFilter(c)}>
                                     {c === 'Semua' ? '🍽 Semua' : `${catEmoji[c]} ${c}`}
                                 </button>
                             ))}
@@ -144,6 +174,9 @@ const PotluckSection = () => {
                                             {item.kuantiti && <div className="potluck-qty">📦 {item.kuantiti}</div>}
                                             <span className="badge badge-gold" style={{ marginTop: '0.4rem' }}>{item.kategori}</span>
                                         </div>
+                                        <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit hidangan">
+                                            <Pencil size={13} />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -151,6 +184,53 @@ const PotluckSection = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            {editItem && (
+                <div className="edit-modal-overlay" onClick={closeEdit}>
+                    <div className="edit-modal glass-card" onClick={e => e.stopPropagation()}>
+                        <div className="edit-modal-header">
+                            <h3>✏️ Kemaskini Hidangan</h3>
+                            <button className="edit-modal-close" onClick={closeEdit}><X size={18} /></button>
+                        </div>
+                        <div className="edit-modal-body">
+                            <div className="form-group">
+                                <label className="form-label">Nama Penyumbang *</label>
+                                <input className="form-control" name="nama" value={editForm.nama} onChange={handleEditChange} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Kategori</label>
+                                <div className="cat-selector" style={{ flexWrap: 'wrap' }}>
+                                    {categories.slice(1).map(cat => (
+                                        <button key={cat} type="button"
+                                            className={`cat-btn ${editForm.kategori === cat ? 'active' : ''}`}
+                                            onClick={() => setEditForm(p => ({ ...p, kategori: cat }))}>
+                                            {catEmoji[cat]} {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="form-grid form-grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">Nama Hidangan *</label>
+                                    <input className="form-control" name="makanan" value={editForm.makanan} onChange={handleEditChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Kuantiti</label>
+                                    <input className="form-control" name="kuantiti" value={editForm.kuantiti} onChange={handleEditChange} placeholder="Cth: 5 kg" />
+                                </div>
+                            </div>
+                            {editError && <div className="error-text">⚠️ {editError}</div>}
+                        </div>
+                        <div className="edit-modal-footer">
+                            <button className="btn btn-outline" onClick={closeEdit}>Batal</button>
+                            <button className="btn btn-primary" onClick={handleEditSave} disabled={editLoading}>
+                                {editLoading ? <><span className="spinner" /> Menyimpan...</> : <><Save size={16} /> Simpan Perubahan</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };

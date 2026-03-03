@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Users, UserCheck, CheckCircle, LayoutList, LayoutGrid, Search, Phone } from 'lucide-react';
+import { Users, UserCheck, CheckCircle, LayoutList, LayoutGrid, Search, Phone, Pencil, X, Save } from 'lucide-react';
 import './RSVPSection.css';
 
 const initialForm = {
@@ -21,8 +21,14 @@ const RSVPSection = () => {
     const [error, setError] = useState('');
     const [stats, setStats] = useState({ families: 0, totalPax: 0 });
     const [list, setList] = useState([]);
-    const [viewMode, setViewMode] = useState('card'); // 'card' | 'table'
+    const [viewMode, setViewMode] = useState('card');
     const [search, setSearch] = useState('');
+
+    // Edit state
+    const [editItem, setEditItem] = useState(null);
+    const [editForm, setEditForm] = useState({});
+    const [editLoading, setEditLoading] = useState(false);
+    const [editError, setEditError] = useState('');
 
     useEffect(() => {
         const q = query(collection(db, 'rsvp_attendance'), orderBy('created_at', 'desc'));
@@ -71,6 +77,48 @@ const RSVPSection = () => {
         item.phone?.includes(search)
     );
 
+    // Edit handlers
+    const openEdit = (item) => {
+        setEditItem(item);
+        setEditForm({
+            nama: item.nama || '',
+            keluarga: item.keluarga || '',
+            type: item.type || 'keluarga',
+            pax: item.pax || 1,
+            phone: item.phone || '',
+            email: item.email || '',
+            catatan: item.catatan || '',
+        });
+        setEditError('');
+    };
+    const closeEdit = () => { setEditItem(null); setEditForm({}); setEditError(''); };
+    const handleEditChange = e => {
+        const { name, value } = e.target;
+        setEditForm(prev => ({ ...prev, [name]: value }));
+    };
+    const handleEditSave = async () => {
+        setEditError('');
+        if (!editForm.nama.trim()) { setEditError('Nama tidak boleh kosong.'); return; }
+        if (!editForm.phone.trim()) { setEditError('No. telefon tidak boleh kosong.'); return; }
+        setEditLoading(true);
+        try {
+            await updateDoc(doc(db, 'rsvp_attendance', editItem.id), {
+                nama: editForm.nama,
+                keluarga: editForm.keluarga,
+                type: editForm.type,
+                pax: Number(editForm.pax),
+                phone: editForm.phone,
+                email: editForm.email,
+                catatan: editForm.catatan,
+            });
+            closeEdit();
+        } catch (err) {
+            setEditError('Ralat semasa kemaskini. Cuba semula.');
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
     return (
         <section id="rsvp" className="section rsvp-section">
             <div className="container">
@@ -101,19 +149,14 @@ const RSVPSection = () => {
 
                 {/* Form + Compact List */}
                 <div className="rsvp-layout">
-                    {/* Form */}
                     <div className="rsvp-form-card glass-card reveal">
                         {submitted ? (
                             <div className="success-state">
-                                <div className="success-icon">
-                                    <CheckCircle size={32} color="white" />
-                                </div>
+                                <div className="success-icon"><CheckCircle size={32} color="white" /></div>
                                 <h3>Pendaftaran Berjaya! 🎉</h3>
                                 <p>Terima kasih, <strong>{form.nama}</strong>! Pendaftaran anda telah diterima.</p>
                                 <p>Kami nantikan kehadiran anda bersama keluarga di Villa Arasy!</p>
-                                <button className="btn btn-primary" onClick={resetForm}>
-                                    Daftar Keluarga Lain
-                                </button>
+                                <button className="btn btn-primary" onClick={resetForm}>Daftar Keluarga Lain</button>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit}>
@@ -121,21 +164,15 @@ const RSVPSection = () => {
                                     <Users size={20} />
                                     <span>Maklumat Pendaftaran</span>
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Jenis Pendaftaran</label>
                                     <div className="tab-group">
                                         <button type="button" className={`tab-btn ${form.type === 'keluarga' ? 'active' : ''}`}
-                                            onClick={() => setForm(p => ({ ...p, type: 'keluarga' }))}>
-                                            🏠 Ketua Keluarga
-                                        </button>
+                                            onClick={() => setForm(p => ({ ...p, type: 'keluarga' }))}>🏠 Ketua Keluarga</button>
                                         <button type="button" className={`tab-btn ${form.type === 'individu' ? 'active' : ''}`}
-                                            onClick={() => setForm(p => ({ ...p, type: 'individu' }))}>
-                                            👤 Individu
-                                        </button>
+                                            onClick={() => setForm(p => ({ ...p, type: 'individu' }))}>👤 Individu</button>
                                     </div>
                                 </div>
-
                                 <div className="form-grid form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Nama Penuh *</label>
@@ -146,7 +183,6 @@ const RSVPSection = () => {
                                         <input className="form-control" name="keluarga" value={form.keluarga} onChange={handleChange} placeholder="Cth: Keluarga Pak Long" />
                                     </div>
                                 </div>
-
                                 <div className="form-grid form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Jumlah Pax *</label>
@@ -157,19 +193,15 @@ const RSVPSection = () => {
                                         <input className="form-control" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="012-3456789" required />
                                     </div>
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Emel (pilihan)</label>
                                     <input className="form-control" name="email" type="email" value={form.email} onChange={handleChange} placeholder="email@contoh.com" />
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Catatan (pilihan)</label>
                                     <textarea className="form-control" name="catatan" value={form.catatan} onChange={handleChange} rows={3} placeholder="Ada keperluan khas? Hubungi kami!" />
                                 </div>
-
                                 {error && <div className="error-text" style={{ fontSize: '0.875rem' }}>⚠️ {error}</div>}
-
                                 <button className="btn btn-primary btn-lg w-full" type="submit" disabled={loading}>
                                     {loading ? <><span className="spinner" /> Mendaftar...</> : <><UserCheck size={20} /> Daftar Sekarang</>}
                                 </button>
@@ -177,7 +209,7 @@ const RSVPSection = () => {
                         )}
                     </div>
 
-                    {/* Compact Card List – right column */}
+                    {/* Compact Card List */}
                     <div className="rsvp-list reveal">
                         <div className="rsvp-list-header-row">
                             <h3 className="rsvp-list-title">👥 Senarai Terkini</h3>
@@ -198,60 +230,42 @@ const RSVPSection = () => {
                                                 <span className="badge badge-gold">{item.type === 'keluarga' ? '🏠 Keluarga' : '👤 Individu'}</span>
                                             </div>
                                         </div>
+                                        <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit pendaftaran">
+                                            <Pencil size={13} />
+                                        </button>
                                     </div>
                                 ))}
                                 {list.length > 8 && (
                                     <button className="rsvp-more-hint" onClick={() => {
                                         document.querySelector('#rsvp-full-list')?.scrollIntoView({ behavior: 'smooth' });
-                                    }}>
-                                        +{list.length - 8} lagi — lihat senarai penuh ↓
-                                    </button>
+                                    }}>+{list.length - 8} lagi — lihat senarai penuh ↓</button>
                                 )}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* ── FULL REGISTRATION LIST ── */}
+                {/* Full Registration List */}
                 {list.length > 0 && (
                     <div id="rsvp-full-list" className="rsvp-full-list reveal">
                         <div className="rsvp-full-header">
                             <div className="rsvp-full-title-row">
                                 <div>
                                     <h3>📋 Senarai Lengkap Pendaftaran</h3>
-                                    <p className="rsvp-full-subtitle">
-                                        Semua <strong>{list.length}</strong> pendaftaran — Jumlah <strong>{stats.totalPax} pax</strong> hadir
-                                    </p>
+                                    <p className="rsvp-full-subtitle">Semua <strong>{list.length}</strong> pendaftaran — Jumlah <strong>{stats.totalPax} pax</strong> hadir</p>
                                 </div>
                                 <div className="rsvp-view-toggle">
-                                    <button className={`view-btn ${viewMode === 'card' ? 'active' : ''}`}
-                                        onClick={() => setViewMode('card')} title="Paparan Kad">
-                                        <LayoutGrid size={16} />
-                                    </button>
-                                    <button className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                                        onClick={() => setViewMode('table')} title="Paparan Jadual">
-                                        <LayoutList size={16} />
-                                    </button>
+                                    <button className={`view-btn ${viewMode === 'card' ? 'active' : ''}`} onClick={() => setViewMode('card')} title="Paparan Kad"><LayoutGrid size={16} /></button>
+                                    <button className={`view-btn ${viewMode === 'table' ? 'active' : ''}`} onClick={() => setViewMode('table')} title="Paparan Jadual"><LayoutList size={16} /></button>
                                 </div>
                             </div>
-
                             <div className="rsvp-search-wrap">
                                 <Search size={16} className="rsvp-search-icon" />
-                                <input
-                                    className="form-control rsvp-search"
-                                    type="text"
-                                    placeholder="Cari nama, keluarga, atau no. telefon..."
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                />
+                                <input className="form-control rsvp-search" type="text" placeholder="Cari nama, keluarga, atau no. telefon..."
+                                    value={search} onChange={e => setSearch(e.target.value)} />
                                 {search && <button className="rsvp-search-clear" onClick={() => setSearch('')}>✕</button>}
                             </div>
-
-                            {search && (
-                                <div className="rsvp-search-result">
-                                    🔍 {filtered.length} keputusan untuk "{search}"
-                                </div>
-                            )}
+                            {search && <div className="rsvp-search-result">🔍 {filtered.length} keputusan untuk "{search}"</div>}
                         </div>
 
                         {/* Card Grid */}
@@ -261,7 +275,10 @@ const RSVPSection = () => {
                                     <div key={item.id} className="rsvp-full-card card">
                                         <div className="rsvp-full-card-header">
                                             <div className="rsvp-full-avatar">{item.nama?.[0]?.toUpperCase() || '?'}</div>
-                                            <div className="rsvp-full-no">#{i + 1}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <div className="rsvp-full-no">#{i + 1}</div>
+                                                <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit"><Pencil size={12} /></button>
+                                            </div>
                                         </div>
                                         <div className="rsvp-full-card-body">
                                             <div className="rsvp-full-name">{item.nama}</div>
@@ -291,6 +308,7 @@ const RSVPSection = () => {
                                             <th>Pax</th>
                                             <th>No. Telefon</th>
                                             <th>Catatan</th>
+                                            <th>Edit</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -314,6 +332,11 @@ const RSVPSection = () => {
                                                     <a href={`tel:${item.phone}`} className="phone-link">{item.phone}</a>
                                                 </td>
                                                 <td className="td-catatan">{item.catatan || <span className="td-empty">–</span>}</td>
+                                                <td>
+                                                    <button className="edit-icon-btn" onClick={() => openEdit(item)} title="Edit">
+                                                        <Pencil size={13} />
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -321,7 +344,7 @@ const RSVPSection = () => {
                                         <tr>
                                             <td colSpan={4} className="tf-label">JUMLAH KESELURUHAN</td>
                                             <td className="tf-total">{filtered.reduce((s, r) => s + (Number(r.pax) || 0), 0)} pax</td>
-                                            <td colSpan={2}></td>
+                                            <td colSpan={3}></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -330,6 +353,64 @@ const RSVPSection = () => {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {editItem && (
+                <div className="edit-modal-overlay" onClick={closeEdit}>
+                    <div className="edit-modal glass-card" onClick={e => e.stopPropagation()}>
+                        <div className="edit-modal-header">
+                            <h3>✏️ Kemaskini Pendaftaran</h3>
+                            <button className="edit-modal-close" onClick={closeEdit}><X size={18} /></button>
+                        </div>
+                        <div className="edit-modal-body">
+                            <div className="form-group">
+                                <label className="form-label">Jenis</label>
+                                <div className="tab-group">
+                                    <button type="button" className={`tab-btn ${editForm.type === 'keluarga' ? 'active' : ''}`}
+                                        onClick={() => setEditForm(p => ({ ...p, type: 'keluarga' }))}>🏠 Ketua Keluarga</button>
+                                    <button type="button" className={`tab-btn ${editForm.type === 'individu' ? 'active' : ''}`}
+                                        onClick={() => setEditForm(p => ({ ...p, type: 'individu' }))}>👤 Individu</button>
+                                </div>
+                            </div>
+                            <div className="form-grid form-grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">Nama Penuh *</label>
+                                    <input className="form-control" name="nama" value={editForm.nama} onChange={handleEditChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Nama Keluarga</label>
+                                    <input className="form-control" name="keluarga" value={editForm.keluarga} onChange={handleEditChange} />
+                                </div>
+                            </div>
+                            <div className="form-grid form-grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">Jumlah Pax *</label>
+                                    <input className="form-control" name="pax" type="number" min="1" max="50" value={editForm.pax} onChange={handleEditChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">No. Telefon *</label>
+                                    <input className="form-control" name="phone" type="tel" value={editForm.phone} onChange={handleEditChange} />
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Emel</label>
+                                <input className="form-control" name="email" type="email" value={editForm.email} onChange={handleEditChange} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Catatan</label>
+                                <textarea className="form-control" name="catatan" value={editForm.catatan} onChange={handleEditChange} rows={2} />
+                            </div>
+                            {editError && <div className="error-text">⚠️ {editError}</div>}
+                        </div>
+                        <div className="edit-modal-footer">
+                            <button className="btn btn-outline" onClick={closeEdit}>Batal</button>
+                            <button className="btn btn-primary" onClick={handleEditSave} disabled={editLoading}>
+                                {editLoading ? <><span className="spinner" /> Menyimpan...</> : <><Save size={16} /> Simpan Perubahan</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };
