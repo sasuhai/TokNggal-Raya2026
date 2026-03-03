@@ -57,16 +57,15 @@ const FamilySection = () => {
                         <div className="youtube-wrapper">
                             {!videoLoaded ? (
                                 <div className="youtube-thumbnail" onClick={() => setVideoLoaded(true)}>
-                                    <img
-                                        src="https://img.youtube.com/vi/OVAxgx5gDqc/maxresdefault.jpg"
-                                        alt="Video Kenangan Keluarga Tok Nggal"
-                                        className="yt-thumb-img"
-                                        onError={e => { e.target.src = 'https://img.youtube.com/vi/OVAxgx5gDqc/hqdefault.jpg'; }}
-                                    />
-                                    <div className="yt-play-btn">
-                                        <Play size={32} fill="white" color="white" />
+                                    <div className="yt-custom-bg">
+                                        <div className="yt-deco-circle yt-deco-1" />
+                                        <div className="yt-deco-circle yt-deco-2" />
+                                        <div className="yt-title-text">🎞 Kenangan Keluarga Tok Nggal</div>
+                                        <div className="yt-play-btn">
+                                            <Play size={36} fill="white" color="white" />
+                                        </div>
+                                        <div className="yt-overlay-text">Klik untuk tonton video</div>
                                     </div>
-                                    <div className="yt-overlay-text">Klik untuk tonton</div>
                                 </div>
                             ) : (
                                 <iframe

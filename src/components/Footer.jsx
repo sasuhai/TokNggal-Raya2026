@@ -39,7 +39,7 @@ const Footer = () => {
 
                 <div className="footer-bottom">
                     <p>Dibina dengan <Heart size={14} style={{ display: 'inline', color: '#f87171' }} /> untuk keluarga Tok Nggal Batu Burok</p>
-                    <p className="footer-copy">© 2026 Portal Rasmi Perhimpunan Keluarga Tok Nggal &nbsp;·&nbsp; <a href="/admin" style={{ color: 'var(--gold-400)' }}>Admin</a></p>
+                    <p className="footer-copy">Idiahus © 2026 Portal Rasmi Perhimpunan Keluarga Tok Nggal &nbsp;·&nbsp; <a href="/admin" style={{ color: 'var(--gold-400)' }}>Admin</a></p>
                 </div>
             </div>
         </footer>
