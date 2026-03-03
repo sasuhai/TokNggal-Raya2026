@@ -209,13 +209,13 @@ const RSVPSection = () => {
                                         <label className="form-label">🧑 Dewasa *</label>
                                         <input className="form-control" name="pax_dewasa" type="number" min="1" max="50"
                                             value={form.pax_dewasa} onChange={handleChange} />
-                                        <span className="form-hint">13 tahun ke atas</span>
+                                        <span className="form-hint">9 tahun ke atas</span>
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">👶 Kanak-kanak</label>
                                         <input className="form-control" name="pax_kanak" type="number" min="0" max="30"
                                             value={form.pax_kanak} onChange={handleChange} />
-                                        <span className="form-hint">12 tahun ke bawah</span>
+                                        <span className="form-hint">8 tahun ke bawah</span>
                                     </div>
                                 </div>
                                 <div className="pax-total-hint">
@@ -438,12 +438,12 @@ const RSVPSection = () => {
                                 <div className="form-group">
                                     <label className="form-label">🧑 Dewasa *</label>
                                     <input className="form-control" name="pax_dewasa" type="number" min="1" max="50" value={editForm.pax_dewasa} onChange={handleEditChange} />
-                                    <span className="form-hint">13 tahun ke atas</span>
+                                    <span className="form-hint">9 tahun ke atas</span>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">👶 Kanak-kanak</label>
                                     <input className="form-control" name="pax_kanak" type="number" min="0" max="30" value={editForm.pax_kanak} onChange={handleEditChange} />
-                                    <span className="form-hint">12 tahun ke bawah</span>
+                                    <span className="form-hint">8 tahun ke bawah</span>
                                 </div>
                             </div>
                             <div className="pax-total-hint">
