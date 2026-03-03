@@ -34,7 +34,7 @@ const VenueSection = () => {
                         <div className="venue-map-frame">
                             <iframe
                                 title="Lokasi Villa Arasy"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.1234567890123!2d101.58!3d2.73!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31d1f1e4b1234567%3A0x1234567890abcdef!2sVilla%20Arasy%2C%20Sepang%2C%20Selangor!5e0!3m2!1sen!2smy!4v1234567890123!5m2!1sen!2smy"
+                                src="https://maps.google.com/maps?q=Villa+Arasy,+Jalan+4+Keranji,+Sepang,+Selangor&z=15&output=embed"
                                 width="100%"
                                 height="280"
                                 style={{ border: 0, borderRadius: '16px' }}
